@@ -1,44 +1,77 @@
-import { useState } from 'react'
-import logo from './logo.svg'
+import { ActionIcon, Box, Group, List, Stack, Text } from '@mantine/core'
+import useSWR from 'swr'
+import { CircleCheck, CircleDashed, Trash } from 'tabler-icons-react'
 import './App.css'
+import AddTodo from './Components/AddTodo'
+
+export const ENDPOINT = 'http://localhost:4000'
+
+export interface TODO {
+  id: number
+  title: string
+  description: string
+  done: boolean
+}
+
+const fetcher = (url: string) =>
+  fetch(`${ENDPOINT}/${url}`).then((r) => r.json())
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { data, mutate } = useSWR<TODO[]>(`api/todos`, fetcher)
+
+  async function markTodoDone(id: number) {
+    const updated = await fetch(`${ENDPOINT}/api/todo/done/${id}`, {
+      method: 'PATCH',
+    }).then((r) => r.json())
+    mutate(updated)
+  }
+
+  async function deleteTodo(id: number) {
+    const updated = await fetch(`${ENDPOINT}/api/todo/${id}`, {
+      method: 'DELETE',
+    }).then((r) => r.json())
+    mutate(updated)
+  }
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>Hello Vite + React!</p>
-        <p>
-          <button type="button" onClick={() => setCount((count) => count + 1)}>
-            count is: {count}
-          </button>
-        </p>
-        <p>
-          Edit <code>App.tsx</code> and save to test HMR updates.
-        </p>
-        <p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-          {' | '}
-          <a
-            className="App-link"
-            href="https://vitejs.dev/guide/features.html"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Vite Docs
-          </a>
-        </p>
-      </header>
-    </div>
+    <Box
+      sx={(theme) => ({
+        padding: '2rem',
+        width: '100%',
+        maxWidth: '40rem',
+        margin: '0 auto',
+        textAlign: 'center',
+      })}
+    >
+      <AddTodo mutate={mutate} />
+      {data && data.length > 0 ? (
+        <List spacing="xs" size="sm" mt="lg" center>
+          {data?.map((todo) => {
+            return (
+              <List.Item
+                onClick={() => markTodoDone(todo.id)}
+                key={`todo__${todo.id}`}
+                icon={todo.done ? <CircleCheck /> : <CircleDashed />}
+              >
+                <Group>
+                  <Stack align="flex-start" spacing={0}>
+                    <Text size="md" weight={700}>
+                      {todo.title}
+                    </Text>
+                    <Text size="md"> {todo.description}</Text>
+                  </Stack>
+                  <ActionIcon onClick={() => deleteTodo(todo.id)}>
+                    <Trash />
+                  </ActionIcon>
+                </Group>
+              </List.Item>
+            )
+          })}
+        </List>
+      ) : (
+        <Text mt="lg">Todo list is empty. Add something</Text>
+      )}
+    </Box>
   )
 }
 

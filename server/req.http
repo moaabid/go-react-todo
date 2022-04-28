@@ -1,0 +1,20 @@
+GET http://localhost:4000/health
+
+###
+POST http://localhost:4000/api/todo
+Content-Type: application/json
+
+{
+  "title": "Buy milk", 
+    "description": "Buy milk from the shop"
+}
+
+###
+PATCH http://localhost:4000/api/todo/done/2
+
+###
+GET http://localhost:4000/api/todos
+
+
+###
+DELETE  http://localhost:4000/api/todo/1
